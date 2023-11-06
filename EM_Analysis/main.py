@@ -1,5 +1,5 @@
 import pandas as pd
-from math import tan, pi, sqrt, atan
+from math import tan, pi
 import math
 import ast
 
@@ -117,6 +117,8 @@ class EyeMovement:
         # Calculate for fixations lasting longer than 100ms
         col = f'{self.eye_to_use}_gaze_point_on_display_area'
         fixation_start = None
+        # Add a new column to store center points of fixations
+        self.data['fixation_center'] = [(None, None)] * len(self.data)
         
         for i, state in enumerate(self.states):
             if state == 'Fixation':
@@ -124,12 +126,15 @@ class EyeMovement:
                     fixation_start = i
             else:
                 if fixation_start is not None:
-                    duration = (i - fixation_start) * (1/60)  # 60 Hz sampling rate
-                    if duration > 0.1:  # Lasting longer than 100ms
+                    duration = (i - fixation_start) * (1000/60)  # 16.66 ms/frame
+                    if duration > 100:  # Lasting longer than 100ms
                         fixations = self.data[col][fixation_start:i]
                         x_center = fixations.apply(lambda p: p[0]).mean()
                         y_center = fixations.apply(lambda p: p[1]).mean()
-                        print(f"Center of fixation from {fixation_start} to {i}: ({x_center}, {y_center})")
+                        center_point = (x_center, y_center)
+                        for j in range(fixation_start, i):
+                            self.data.at[j, 'fixation_center'] = center_point
+                        # print(f"Center of fixation from {fixation_start} to {i}: ({x_center}, {y_center})")
                     fixation_start = None
 
     def add_state_to_csv(self, filepath):
@@ -152,4 +157,4 @@ if __name__ == "__main__":
     eye_movement = EyeMovement(input_filepath)
     eye_movement.analyze(output_filepath)
 
-    print("Analysis completed and results saved to output.csv.")
+    print("Analysis completed and results saved to {Original CSV}_output.csv.")
