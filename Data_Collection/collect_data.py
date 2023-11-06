@@ -8,7 +8,7 @@ found_eyetrackers = tr.find_all_eyetrackers()
 my_eyetracker = found_eyetrackers[0]
 
 now = datetime.now()
-file_name = now.strftime('%Y%m%d%H%M.csv')
+file_name = now.strftime('./Data/%Y%m%d%H%M.csv')
 data = defaultdict(list)
 
 def gaze_data_callback(gaze_data):

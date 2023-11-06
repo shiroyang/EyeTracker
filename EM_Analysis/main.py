@@ -1,10 +1,32 @@
 import pandas as pd
+from math import tan, pi, sqrt, atan
 import math
+import ast
 
+# GLOBAL VARIABLES START
+input_filepath = "./Data_Collection/Data/202309281706.csv"
+output_filepath = "./Data_Collection/Data/202309281706_output.csv"
+SCREEN_SIZE_W = 609.2  # mm
+SCREEN_SIZE_H = 349.4  # mm
+SCREEN_TO_EYE_DIST = 650  # mm
+SACCADE_THRESHOLD = pi / 6  # 30 degrees
+SAMPLING_RATE = 60  # Hz
+# GLOBAL VARIABLES END
+
+def convert_to_tuple(value):
+    try:
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        # Handle the exception or return a default value
+        return (None, None)
 class EyeMovement:
 
     def __init__(self, filepath):
-        self.data = pd.read_csv(filepath)
+        converters = {
+            'left_gaze_point_on_display_area': convert_to_tuple,
+            'right_gaze_point_on_display_area': convert_to_tuple
+        }
+        self.data = pd.read_csv(filepath, converters=converters)
         self.states = []
 
     def decide_eye_to_use(self):
@@ -73,17 +95,17 @@ class EyeMovement:
         for i in range(len(self.data) - 1):
             if self.states[i]:  # Skip already identified states
                 continue
-                
+            
             x1, y1 = self.data.at[i, col]
             x2, y2 = self.data.at[i+1, col]
             
             # Convert to actual coordinates on monitor
-            x1, y1 = x1 * 609.2, y1 * 349.4
-            x2, y2 = x2 * 609.2, y2 * 349.4
+            x1, y1 = x1 * SCREEN_SIZE_W, y1 * SCREEN_SIZE_H
+            x2, y2 = x2 * SCREEN_SIZE_W, y2 * SCREEN_SIZE_H
             
             # Calculate the velocity
-            v = math.sqrt((x2 - x1)**2 + (y2 - y1)**2) * 60  # 60 Hz sampling rate
-            if v >= 30:  # 30 degree per second threshold
+            v = math.sqrt((x2 - x1)**2 + (y2 - y1)**2) * SAMPLING_RATE  # 60 Hz sampling rate
+            if v >= 650 * tan(SACCADE_THRESHOLD):  # 30 degree per second threshold
                 self.states[i] = 'Saccade'
 
     def identify_fixation(self):
@@ -126,10 +148,8 @@ class EyeMovement:
 
 # Example usage
 if __name__ == "__main__":
-    # Assuming the file path for the input CSV is "YYYYMMDDHHMM.csv"
-    filepath = "YYYYMMDDHHMM.csv"
     
-    eye_movement = EyeMovement(filepath)
-    eye_movement.analyze("output.csv")
+    eye_movement = EyeMovement(input_filepath)
+    eye_movement.analyze(output_filepath)
 
     print("Analysis completed and results saved to output.csv.")
