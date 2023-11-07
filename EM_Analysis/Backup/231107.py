@@ -4,8 +4,8 @@ import math
 import ast
 
 # GLOBAL VARIABLES START
-input_filepath = "./Data_Collection/Data/202311071800.csv"
-output_filepath = input_filepath[:-4] + "_output.csv"
+input_filepath = "./Data_Collection/Data/202309281706.csv"
+output_filepath = "./Data_Collection/Data/202309281706_output.csv"
 SCREEN_SIZE_W = 609.2  # mm
 SCREEN_SIZE_H = 349.4  # mm
 SCREEN_TO_EYE_DIST = 650  # mm
@@ -19,7 +19,6 @@ def convert_to_tuple(value):
     except (ValueError, SyntaxError):
         # Handle the exception or return a default value
         return (None, None)
-    
 class EyeMovement:
 
     def __init__(self, filepath):
