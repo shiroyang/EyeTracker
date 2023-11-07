@@ -4,7 +4,7 @@ import math
 import ast
 
 # GLOBAL VARIABLES START
-input_filepath = "./Data_Collection/Data/202311071800.csv"
+input_filepath = "./Data_Collection/Data/202311071830.csv"
 output_filepath = input_filepath[:-4] + "_output.csv"
 SCREEN_SIZE_W = 609.2  # mm
 SCREEN_SIZE_H = 349.4  # mm
@@ -99,7 +99,7 @@ class EyeMovement:
             
             x1, y1 = self.data.at[i, col]
             x2, y2 = self.data.at[i+1, col]
-            
+            if x1 is None or x2 is None or y1 is None or y2 is None: continue
             # Convert to actual coordinates on monitor
             x1, y1 = x1 * SCREEN_SIZE_W, y1 * SCREEN_SIZE_H
             x2, y2 = x2 * SCREEN_SIZE_W, y2 * SCREEN_SIZE_H
@@ -158,4 +158,4 @@ if __name__ == "__main__":
     eye_movement = EyeMovement(input_filepath)
     eye_movement.analyze(output_filepath)
 
-    print("Analysis completed and results saved to {Original CSV}_output.csv.")
+    print("Analysis completed and results saved to {}".format(output_filepath))
