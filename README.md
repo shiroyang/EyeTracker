@@ -63,19 +63,18 @@ Our objective is to augment the `.csv` file with an additional attribute represe
 
 ## Next Steps
 
-1. **Development of the `EyeMovement` class:**
-   - Implement methods to parse `.csv` files and extract gaze data.
-   - Develop algorithms to identify and categorize eye movement states.
-   - Ensure interpolation and calculation accuracy for state determination.
-
-2. **Testing:**
-   - Use sample datasets to validate the analysis methods.
-   - Ensure that the edge cases, like rapid state transitions, are accurately detected.
-
-3. **Documentation:**
-   - Provide clear usage instructions and examples.
-   - Document the algorithms and their assumptions.
-
-4. **Optimization and Refinement:**
-   - Optimize for performance with large datasets.
-   - Refine the system based on user feedback and testing outcomes.
+1. **11.08 Prof. Nakashima**
+   - Fixation Centerが一部の状況で表示されないエラー処理
+   - Data_Collectionをmulti-threadに変更、3 threads. File1 records the stimulus number and the time stamp of the fixation center. File2 records the EM data.
+      - thread 1: input from eye tracker
+      - thread 2: input from keyboard
+      - thread 3: show stimuli (1 sec fixaiton + 3 sec stimulus + 1 sec grey background)
+   - `preprocess.py`
+      - Find the timestamp that is closest to the stimulus onset, use binary search
+      - extract 5 secs of data (1 sec fixation + 3 sec stimulus + 1 sec grey background), which is 300 rows of data from the timestamp
+      - do the basic process as `main.py`
+      - remove the first 60 rows and the last 60 rows
+         - fix the timestamp to start from 0
+         - add column stimulus number
+         - add correct/incorrect column
+   
