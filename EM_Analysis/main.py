@@ -4,12 +4,13 @@ import math
 import ast
 
 # GLOBAL VARIABLES START
-input_filepath = "./Data_Collection/Data/202311071830.csv"
+input_filepath = "./Data_Collection/Data/202311071829.csv"
 output_filepath = input_filepath[:-4] + "_output.csv"
-SCREEN_SIZE_W = 609.2  # mm
-SCREEN_SIZE_H = 349.4  # mm
+SCREEN_SIZE_W = 596.7  # mm
+PIXEL_PER_MM = SCREEN_SIZE_W / 1920
+SCREEN_SIZE_H = 335.7  # mm
 SCREEN_TO_EYE_DIST = 650  # mm
-SACCADE_THRESHOLD = pi / 6  # 30 degrees
+SACCADE_THRESHOLD = pi / 9  # 20 degrees
 SAMPLING_RATE = 60  # Hz
 # GLOBAL VARIABLES END
 
@@ -34,6 +35,8 @@ class EyeMovement:
         left_valid = self.data['left_gaze_point_validity'].sum()
         right_valid = self.data['right_gaze_point_validity'].sum()
         self.eye_to_use = 'left' if left_valid > right_valid else 'right'
+        print(self.eye_to_use)
+        self.validity_col = f'{self.eye_to_use}_gaze_point_validity'
 
     def interpolate_coordinates(self):
         # Assumes self.decide_eye_to_use() has been called
@@ -62,6 +65,8 @@ class EyeMovement:
                             x = x1 + alpha * (x2 - x1)
                             y = y1 + alpha * (y2 - y1)
                             self.data.at[j, col] = (x, y)
+                            # set validity to 2 to indicate that the point is interpolated
+                            self.data.at[j, validity_col] = 2
             else:
                 idx += 1
 
@@ -72,12 +77,9 @@ class EyeMovement:
 
         while idx < total_rows:
             # Check if both eyes' data is missing at the current index
-            if (self.data.at[idx, 'left_gaze_point_validity'] == 0 and 
-                self.data.at[idx, 'right_gaze_point_validity'] == 0):
+            if self.data.at[idx, self.validity_col] == 0:
                 blink_start_idx = idx
-                while (idx < total_rows and 
-                    self.data.at[idx, 'left_gaze_point_validity'] == 0 and 
-                    self.data.at[idx, 'right_gaze_point_validity'] == 0):
+                while (idx < total_rows and self.data.at[idx, self.validity_col] == 0):
                     idx += 1
                 blink_end_idx = idx
 
@@ -104,9 +106,9 @@ class EyeMovement:
             x1, y1 = x1 * SCREEN_SIZE_W, y1 * SCREEN_SIZE_H
             x2, y2 = x2 * SCREEN_SIZE_W, y2 * SCREEN_SIZE_H
             
-            # Calculate the velocity
-            v = math.sqrt((x2 - x1)**2 + (y2 - y1)**2) * SAMPLING_RATE  # 60 Hz sampling rate
-            if v >= 650 * tan(SACCADE_THRESHOLD):  # 30 degree per second threshold
+            # Calculate the velocity, pixel/sec
+            v = math.sqrt((x2 - x1)**2 + (y2 - y1)**2) * SAMPLING_RATE * PIXEL_PER_MM # 60 Hz sampling rate
+            if v >= SCREEN_TO_EYE_DIST * tan(SACCADE_THRESHOLD):  # 30 degree per second threshold
                 self.states[i] = 'Saccade'
 
     def identify_fixation(self):
@@ -115,7 +117,7 @@ class EyeMovement:
                 self.states[i] = 'Fixation'
 
     def compute_center_point(self):
-        # Calculate for fixations lasting longer than 100ms
+        # Calculate for fixations lasting longer than 6 frames
         col = f'{self.eye_to_use}_gaze_point_on_display_area'
         fixation_start = None
         # Add a new column to store center points of fixations
