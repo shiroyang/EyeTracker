@@ -1,3 +1,9 @@
+"""
+Stable version of EM Analysis
+Input: EM raw data
+Output: EM data with eye state column and fixation center column
+"""
+
 import pandas as pd
 from math import tan, pi, sqrt
 import ast
