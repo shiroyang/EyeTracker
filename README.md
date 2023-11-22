@@ -64,7 +64,7 @@ Our objective is to augment the `.csv` file with an additional attribute represe
 ## Next Steps
 
 1. **11.08 Prof. Nakashima**
-   - Fixation Centerが一部の状況で表示されないエラー処理
+   - Fixation Centerが一部の状況で表示されないエラー処理 (fixed)
    - Data_Collectionをmulti-threadに変更、3 threads. File1 records the stimulus number and the time stamp of the fixation center. File2 records the EM data.
       - thread 1: input from eye tracker
       - thread 2: input from keyboard
