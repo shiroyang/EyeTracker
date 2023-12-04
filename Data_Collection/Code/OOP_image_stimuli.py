@@ -17,6 +17,7 @@ class StimuliExperiment:
     def __init__(self):
         self.screen_width = get_monitors()[0].width
         self.screen_height = get_monitors()[0].height
+        self.full_screen = (self.screen_width, self.screen_height)
         print(self.screen_width, self.screen_height)
 
         self.is_recording = True
@@ -27,11 +28,11 @@ class StimuliExperiment:
         now = datetime.now()
         self.file_path = now.strftime('./Data_Collection/Data/Raw/Stimuli/%Y%m%d%H%M.csv')
 
-    def place_image_center(self, screen, image):
-        x_offset = (self.screen_width - image.shape[1]) // 2
-        y_offset = (self.screen_height - image.shape[0]) // 2
-        screen[y_offset:y_offset + image.shape[0], x_offset:x_offset + image.shape[1]] = image
-        return screen
+    # def place_image_center(self, screen, image):
+    #     x_offset = (self.screen_width - image.shape[1]) // 2
+    #     y_offset = (self.screen_height - image.shape[0]) // 2
+    #     screen[y_offset:y_offset + image.shape[0], x_offset:x_offset + image.shape[1]] = image
+    #     return screen
 
     def wait_or_break(self, duration):
         start_time = datetime.now()
@@ -43,14 +44,18 @@ class StimuliExperiment:
 
     def display_stimuli_and_record(self):
         fixation_img = cv2.imread('Data_Collection/Img/Instructions/fixation.png')
-        fixation_img = cv2.resize(fixation_img, self.TARGET_SIZE)
+        fixation_img = cv2.resize(fixation_img, self.full_screen)
         grey_img = cv2.imread('Data_Collection/Img/Instructions/grey.png')
-        grey_img = cv2.resize(grey_img, self.TARGET_SIZE)
+        grey_img = cv2.resize(grey_img, self.full_screen)
         image_folder = 'Data_Collection/Img/Animals/'
         image_files = os.listdir(image_folder)
         random.shuffle(image_files)
 
         screen = np.zeros((self.screen_height, self.screen_width, 3), dtype=np.uint8)
+
+        cv2.namedWindow('Stimulus', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Stimulus', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
 
         for selected_image in image_files:
             with self.data_lock:
@@ -64,18 +69,18 @@ class StimuliExperiment:
                 print(f"Failed to load image from {image_path}")
                 continue
 
-            img = cv2.resize(img, self.TARGET_SIZE)
+            img = cv2.resize(img, self.full_screen)
 
             show_time = datetime.now()
             self.image_display_info.append({"timestamp": show_time, "image_name": selected_image})
 
-            cv2.imshow('Stimulus', self.place_image_center(screen.copy(), fixation_img))
+            cv2.imshow('Stimulus', fixation_img)
             self.wait_or_break(self.FIXATION_CROSS_DURATION)
 
-            cv2.imshow('Stimulus', self.place_image_center(screen.copy(), img))
+            cv2.imshow('Stimulus', img)
             self.wait_or_break(self.STIMULUS_DURATION)
 
-            cv2.imshow('Stimulus', self.place_image_center(screen.copy(), grey_img))
+            cv2.imshow('Stimulus', grey_img)
             self.wait_or_break(self.GREY_DURATION)
 
         cv2.destroyAllWindows()

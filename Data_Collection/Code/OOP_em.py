@@ -34,6 +34,7 @@ class EyeTrackerDataCollector:
                 "right_pupil_validity": gaze_data["right_pupil_validity"]
             }
             self.append_data_to_file(gaze_dict)
+            print(gaze_dict)
 
     def append_data_to_file(self, data):
         df = pd.DataFrame([data])
