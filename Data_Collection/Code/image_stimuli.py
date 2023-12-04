@@ -28,13 +28,14 @@ TARGET_SIZE = (1920, 1080)
 
 screen_width = get_monitors()[0].width
 screen_height = get_monitors()[0].height
+print(screen_width, screen_height)
 
 def place_image_center(screen, image):
-    x_offset = screen_width // 2 - TARGET_SIZE[0] // 2
-    y_offset = screen_height // 2 - TARGET_SIZE[1] // 2
+    # Calculate the offset to position the image at the center
+    x_offset = (screen_width - image.shape[1]) // 2
+    y_offset = (screen_height - image.shape[0]) // 2
     screen[y_offset:y_offset + image.shape[0], x_offset:x_offset + image.shape[1]] = image
     return screen
-
 
 def wait_or_break(duration):
     global is_recording

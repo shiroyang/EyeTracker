@@ -1,12 +1,8 @@
 import tobii_research as tr
 from datetime import datetime
-from pynput import keyboard
 import pandas as pd
-import time
 import threading
-import cv2
-import os
-import random
+
 
 # Global variables
 data_lock = threading.Lock()
@@ -43,3 +39,4 @@ if __name__ == "__main__":
     thread_eye.start()
     
     thread_eye.join()
+
