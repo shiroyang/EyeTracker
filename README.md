@@ -70,11 +70,16 @@ Our objective is to augment the `.csv` file with an additional attribute represe
       - thread 2: input from keyboard
       - thread 3: show stimuli (1 sec fixaiton + 3 sec stimulus + 1 sec grey background)
    - `preprocess.py`
-      - Find the timestamp that is closest to the stimulus onset, use binary search
+      - Find the timestamp that is closest to the stimulus onset, use linear search O(N+M)
       - extract 5 secs of data (1 sec fixation + 3 sec stimulus + 1 sec grey background), which is 300 rows of data from the timestamp
       - do the basic process as `main.py`
       - remove the first 60 rows and the last 60 rows
          - fix the timestamp to start from 0
          - add column stimulus number
          - add correct/incorrect column
-   
+   - `vizualize.py`
+      - given the stimulus number, extract the corresponding EM data from preprocessed data.
+      - plot the data with different colors for each state
+      - plot the fixation points in two methods
+         - plot the fixation points as a heatmap
+         - plot the convex hull of the fixation points

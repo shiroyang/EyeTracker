@@ -1,3 +1,7 @@
+"""
+This code will create the image stimuli for the experiment.
+It will also handle the keyboard input.
+"""
 import cv2
 import os
 import random

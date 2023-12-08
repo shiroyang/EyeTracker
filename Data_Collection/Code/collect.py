@@ -1,3 +1,7 @@
+"""
+Step 1.
+This code is used to run the eye tracker and stimuli experiment simultaneously and collect data from both.
+"""
 import threading
 from OOP_em import EyeTrackerDataCollector
 from OOP_image_stimuli import StimuliExperiment

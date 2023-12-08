@@ -1,3 +1,6 @@
+"""
+This script is used to collect eye tracking data using Tobii Pro SDK.
+"""
 import tobii_research as tr
 from datetime import datetime
 import pandas as pd
