@@ -60,7 +60,7 @@ class EyeMovement:
         self.eye_to_use = 'left' if left_valid > right_valid else 'right'
         self.col = f'{self.eye_to_use}_gaze_point_on_display_area'
         self.validity_col = f'{self.eye_to_use}_gaze_point_validity'
-        print(self.eye_to_use)
+        self.data['eye_to_use'] = self.eye_to_use
 
     def interpolate_coordinates(self):
     
