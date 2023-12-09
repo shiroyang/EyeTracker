@@ -1,5 +1,6 @@
 """
-This script is used to collect eye tracking data using Tobii Pro SDK.
+Please import EyeTrackerDataCollector class from this script.
+This class is used to collect eye tracking data using Tobii Pro SDK.
 """
 import tobii_research as tr
 from datetime import datetime

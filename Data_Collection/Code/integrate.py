@@ -4,7 +4,9 @@ Since the EM data collected on 1204 is not adequate, I will neglect the 1st visu
 Therefore, please remove the regarding unnecessary code afterwards.
 
 Step 2.
+Please run this code after step 1.
 This code will integrate the eye tracking data and the image stimuli data based on the timestamp.
+The result will be saved in the Data_Collection/Data/Synced folder.
 """
 import os
 import pandas as pd
@@ -13,7 +15,7 @@ from datetime import datetime
 class DataIntegration:
     EM_DATA_DIR = './Data_Collection/Data/Raw/EM/'
     STIMULI_DATA_DIR = './Data_Collection/Data/Raw/Stimuli/'
-    TARGET_DIR = './Data_Collection/Data/Sync/'
+    TARGET_DIR = './Data_Collection/Data/Synced/'
     FIXATION_CROSS_FRAME = 60
     IMAGE_FRAME = 180 
     GREY_FRAME = 60
