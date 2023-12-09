@@ -1,4 +1,9 @@
 """
+Issue 1209: 
+This code will display stimuli immidiately. 
+However, launching eye tracker will take some time.
+Therefore, I need to add an instruction to show "press enter to start the experiment".
+
 This code will create the image stimuli for the experiment.
 It will also handle the keyboard input.
 """

@@ -65,7 +65,7 @@ Our objective is to augment the `.csv` file with an additional attribute represe
 
 1. **11.08 Prof. Nakashima**
    - Fixation Centerが一部の状況で表示されないエラー処理 (fixed)
-   - Data_Collectionをmulti-threadに変更、3 threads. File1 records the stimulus number and the time stamp of the fixation center. File2 records the EM data.
+   - Data_Collectionをmulti-threadに変更、3 threads. OOP_image_stumili.py records the stimulus number and the timestamp of the fixation cross. File2 records the EM data.
       - thread 1: input from eye tracker
       - thread 2: input from keyboard
       - thread 3: show stimuli (1 sec fixaiton + 3 sec stimulus + 1 sec grey background)
