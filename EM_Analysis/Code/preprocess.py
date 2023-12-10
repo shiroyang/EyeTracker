@@ -108,7 +108,7 @@ class EyeMovement:
                 if blink_end_idx - blink_start_idx >= 6:
                     self.states.extend(['Blink'] * (blink_end_idx - blink_start_idx))
                 else:
-                    self.states.extend(['Error State'] * (blink_end_idx - blink_start_idx))
+                    self.states.extend(['Error'] * (blink_end_idx - blink_start_idx))
             else:
                 self.states.append(None)
                 idx += 1

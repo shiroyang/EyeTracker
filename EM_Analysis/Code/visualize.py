@@ -7,6 +7,7 @@ import sys
 
 from OOP_Heatmap import GazeHeatmap
 from OOP_Scanpath import GazeScanpath
+from OOP_Piechart import GazePiechart
 
 class Visualize:
     def __init__(self) -> None:
@@ -69,14 +70,14 @@ class Visualize:
         print("#################################")
         print("1. Heatmap")
         print("2. Scanpath")
-        print("3. Saccades")
+        print("3. Piechart")
         print("#################################")
         
         while True:
             try:
                 method = int(input("\nSelect the visualization method (enter the number): "))
                 if method in [1, 2, 3]:
-                    return ["heatmap", "scanpath", "saccade"][method - 1]
+                    return ["heatmap", "scanpath", "piechart"][method - 1]
                 else:
                     print("\nInvalid selection. Please enter a number from the list.")
             except ValueError:
@@ -104,9 +105,12 @@ class Visualize:
         elif self.visualize_method == "scanpath":
             scanpath = GazeScanpath(os.path.join(self.INPUT_DIR, self.file_name), self.stimulus)
             scanpath.run()
-        elif self.visualize_method == "saccade":
-            pass
-
+        elif self.visualize_method == "piechart":
+            piechart = GazePiechart(os.path.join(self.INPUT_DIR, self.file_name), self.stimulus)
+            piechart.run()
+            # Rendered the image on web browser, so no need to display the image
+            return True
+        
         self.display_result()
         return True
 
