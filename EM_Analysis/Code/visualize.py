@@ -5,7 +5,7 @@ from threading import Thread
 from pynput import keyboard
 import sys
 
-from OOP_HeatMap import GazeHeatmap
+from OOP_Heatmap import GazeHeatmap
 from OOP_Scanpath import GazeScanpath
 
 class Visualize:

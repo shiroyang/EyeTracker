@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 from matplotlib import image
 import pandas as pd
 import cv2
+import math
 
 class GazeScanpath:
-    def __init__(self, input_path, image_name=None, display_width=1920, display_height=1080, alpha=0.6, n_gaussian_matrix=500, standard_deviation=33):
+    def __init__(self, input_path, image_name, display_width=1920, display_height=1080, alpha=0.85, circle_size=20):
         self.input_path = input_path
         self.image_name = image_name
         self.image_path = os.path.join('./Data_Collection/Img/Animals/', self.image_name)
         self.display_width = display_width
         self.display_height = display_height
         self.alpha = alpha
-        self.output_name = os.path.join('./EM_Analysis/Result/heatmap/', self.image_name)
-        self.n_gaussian_matrix = n_gaussian_matrix
-        self.standard_deviation = standard_deviation
+        self.circle_size = circle_size
+        self.output_name = os.path.join('./EM_Analysis/Result/scanpath/', self.image_name)
         self.resize_image(self.image_path, self.display_width, self.display_height)
         self.gaze_data = None
         self.max_duration = None
@@ -69,22 +69,49 @@ class GazeScanpath:
             
     def draw_scanpath(self):
         fig, ax = self.draw_display()
-        
-        # Iterate over gaze data to plot scanpath
+
+        # Create a colormap instance
+        jet_colormap = plt.cm.jet
+
+        # Function to calculate distance between two points
+        def distance(p1, p2):
+            return math.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+        # Function to get a point on the line at a certain distance from a point
+        def point_on_line(start, end, distance_from_start):
+            line_length = distance(start, end)
+            if line_length == 0:
+                return start
+            ratio = distance_from_start / line_length
+            return start[0] + ratio * (end[0] - start[0]), start[1] + ratio * (end[1] - start[1])
+
+        # Now draw the lines and circles
+        for i in range(len(self.gaze_data) - 1):
+            start = (self.gaze_data[i][0], self.gaze_data[i][1])
+            end = (self.gaze_data[i + 1][0], self.gaze_data[i + 1][1])
+
+            # Calculate points to start and end the line outside of the circles
+            start_line = point_on_line(start, end, self.circle_size)
+            end_line = point_on_line(end, start, self.circle_size)
+
+            # Draw line
+            line = plt.Line2D([start_line[0], end_line[0]], [start_line[1], end_line[1]], color='yellow', linestyle='--', linewidth=1)
+            ax.add_line(line)
+
+        # Draw circles and text
         for i in range(len(self.gaze_data)):
-            # Extract current and next fixation point
             x, y, duration = self.gaze_data[i]
             color_intensity = min(duration / self.max_duration, 1)  # Normalizing duration
-            circle = plt.Circle((x, y), 10, color=(1, 0, 0, color_intensity))
+            color = jet_colormap(color_intensity)[:3]  # Get RGB values from the colormap
+            circle = plt.Circle((x, y), self.circle_size, color=color, alpha=self.alpha)
             ax.add_patch(circle)
-            ax.text(x, y, str(i+1), color='white', ha='center', va='center')
+            ax.text(x, y, str(i + 1), color='black', ha='center', va='center', fontsize=self.circle_size * 0.6)
 
-            if i < len(self.gaze_data) - 1:
-                next_x, next_y, _ = self.gaze_data[i+1]
-                ax.arrow(x, y, next_x - x, next_y - y, head_width=20, head_length=30, fc='black', ec='black')
-        
-        plt.show()
-        
+        ax.invert_yaxis()
+        if self.output_name is not None:
+            fig.savefig(self.output_name)
+        return fig
+
 
     
     def to_pixel(self, coord):
@@ -112,7 +139,6 @@ class GazeScanpath:
             idx += 1
         self.gaze_data = clean_fixation_center_list
         self.max_duration = max(self.gaze_data, key=lambda x:x[-1])[-1]
-        print(clean_fixation_center_list)
         self.draw_scanpath()
 
 
