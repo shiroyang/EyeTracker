@@ -3,25 +3,27 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import image
+import pandas as pd
 
 class GazeHeatmap:
-    def __init__(self, input_path, background_image=None, display_width=1920, display_height=1080, alpha=0.5, output_name='output', n_gaussian_matrix=200, standard_deviation=33):
+    def __init__(self, input_path, image_name=None, display_width=1920, display_height=1080, alpha=0.6, n_gaussian_matrix=500, standard_deviation=33):
         self.input_path = input_path
-        self.background_image = background_image
+        self.image_name = image_name
+        self.image_path = os.path.join('./Data_Collection/Img/Animals/', self.image_name)
         self.display_width = display_width
         self.display_height = display_height
         self.alpha = alpha
-        self.output_name = output_name
+        self.output_name = os.path.join('./EM_Analysis/Result/heatmap/', self.image_name)
         self.n_gaussian_matrix = n_gaussian_matrix
         self.standard_deviation = standard_deviation
 
     def draw_display(self):
         screen = np.zeros((self.display_height, self.display_width, 3), dtype='float32')
-        if self.background_image is not None:
-            if not os.path.isfile(self.background_image):
-                raise Exception(f"ERROR in draw_display: imagefile not found at '{self.background_image}'")
+        if self.image_path is not None:
+            if not os.path.isfile(self.image_path):
+                raise Exception(f"ERROR in draw_display: imagefile not found at '{self.image_path}'")
             # Load image with matplotlib's image module
-            img = image.imread(self.background_image)
+            img = image.imread(self.image_path)
             # Ensure the image is in the correct format
             if img.dtype == np.float32:
                 # Normalize if the image is in float format (common for .png)
@@ -84,16 +86,24 @@ class GazeHeatmap:
             fig.savefig(self.output_name)
         return fig
 
-    def process_data(self):
-        with open(self.input_path) as f:
-            reader = csv.reader(f)
-            raw = list(reader)
-            if len(raw[0]) == 2:
-                self.gaze_data = [(int(q[0]), int(q[1]), 1) for q in raw]
-            else:
-                self.gaze_data = [(int(q[0]), int(q[1]), int(q[2])) for q in raw]
-            self.draw_heatmap()
+    def to_pixel(self, coord):
+        coord = eval(coord)
+        return (coord[0] * self.display_width, coord[1] * self.display_height)
 
-# Usage example:
-heatmap = GazeHeatmap('data.csv', 'test.jpg')
-heatmap.process_data()
+    def run(self):
+        df = pd.read_csv(self.input_path)
+        # Create a condition to filter the DataFrame
+        condition = df['stimuli'] == self.image_name
+        gaze_cor_name = "{}_gaze_point_on_display_area".format(df.loc[condition, 'eye_to_use'].iloc[0])
+        df.loc[condition, 'pixel_gaze_point'] = df.loc[condition, gaze_cor_name].apply(self.to_pixel)
+        gaze_data_list = df.loc[condition, 'pixel_gaze_point'].tolist()
+        # Filter out (None, None) entries
+        filtered_gaze_data_list = [cor for cor in gaze_data_list if cor != (None, None)]
+        self.gaze_data = [(int(cor[0]), int(cor[1]), 1) for cor in filtered_gaze_data_list]
+        self.draw_heatmap()
+
+
+if __name__ == '__main__':
+    # Usage example:
+    heatmap = GazeHeatmap('./Data_Collection/Data/Processed/202312042245.csv', '807715.jpg')
+    heatmap.run()
