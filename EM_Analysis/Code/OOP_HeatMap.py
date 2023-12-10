@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import image
 import pandas as pd
+import cv2
 
 class GazeHeatmap:
     def __init__(self, input_path, image_name=None, display_width=1920, display_height=1080, alpha=0.6, n_gaussian_matrix=500, standard_deviation=33):
@@ -16,7 +17,22 @@ class GazeHeatmap:
         self.output_name = os.path.join('./EM_Analysis/Result/heatmap/', self.image_name)
         self.n_gaussian_matrix = n_gaussian_matrix
         self.standard_deviation = standard_deviation
+        self.resize_image(self.image_path, self.display_width, self.display_height)
 
+    def resize_image(self, image_path, width, height):
+        image = cv2.imread(image_path)
+        if image is None:
+            print("Failed to load image. Please check the image path.")
+            return
+        # Check if image is already 1920x1080
+        if image.shape[1] == self.display_width and image.shape[0] == self.display_height:
+            pass
+        else:
+            # Resize the image
+            resized_image = cv2.resize(image, (self.display_width, self.display_height))
+            cv2.imwrite(image_path, resized_image)
+            print("Image resized to 1920x1080 and saved with correct color.")
+        
     def draw_display(self):
         screen = np.zeros((self.display_height, self.display_width, 3), dtype='float32')
         if self.image_path is not None:
@@ -88,6 +104,7 @@ class GazeHeatmap:
 
     def to_pixel(self, coord):
         coord = eval(coord)
+        if len(coord)!= 2 or coord[0] == None or coord[1] == None: return (None, None)
         return (coord[0] * self.display_width, coord[1] * self.display_height)
 
     def run(self):

@@ -1,90 +1,62 @@
-"""
-Step4.
-
-Visualize the fixation points and saccades on the screen.
-The data will be read from the Data_Collection/Data/Processed folder.
-
-Logic:
-1. Let user select the file 
-2. Let user select the stimuli
-3. Let user select the way to visualize the data
-
-Heatmap class is referenced from
-https://github.com/TobiasRoeddiger/GazePointHeatMap/tree/master
-"""
-
 import os
 import pandas as pd
 from OOP_HeatMap import GazeHeatmap
 import cv2
-
-# def get_matched_files():
-#     files_em = os.listdir(DataIntegration.EM_DATA_DIR)
-#     files_stimuli = os.listdir(DataIntegration.STIMULI_DATA_DIR)
-#     files_target = os.listdir(DataIntegration.TARGET_DIR)
-#     # return the files that are in both em_data and stimuli_data but not in target, which means they are not processed yet
-#     return list(set(files_em) & set(files_stimuli) - set(files_target))
+from threading import Thread
+from pynput import keyboard
+import sys
 
 class Visualize:
     def __init__(self) -> None:
         self.INPUT_DIR = './Data_Collection/Data/Processed/'
         self.RESULT_DIR = './EM_Analysis/Result/'
-        self.file_name = self.select_file()
-        self.data = pd.read_csv(os.path.join(self.INPUT_DIR, self.file_name))
-        self.stimulus = self.select_stimulus()
-        self.visualize_method = self.select_visualize_method()
-    
+        self.stop_thread = False  # Flag to stop the thread
+        self.listener_thread = Thread(target=self.listen_for_esc)
+        self.listener_thread.start()
+
+    def listen_for_esc(self):
+        def on_press(key):
+            if key == keyboard.Key.esc:
+                os._exit(0)
+
+        with keyboard.Listener(on_press=on_press) as listener:
+            listener.join()
+
     def select_file(self):
-        try:
-            input_dir = os.listdir(self.INPUT_DIR)
-            if not input_dir:
-                print("No files available for visualization.")
-                return None
+        input_dir = os.listdir(self.INPUT_DIR)
+        if not input_dir:
+            print("No files available for visualization.")
+            return None
 
-            print("\nHere is a list of files that can be visualized:")
-            print("#################################")
-            for idx, file in enumerate(input_dir, 1):
-                print("{:<4} {}".format(idx, file))
-            print("#################################")
-            
-            while True:
-                try:
-                    file_idx = int(input("\nPlease select the file to visualize (enter the number): ")) - 1
-                    if 0 <= file_idx < len(input_dir):
-                        file_name = input_dir[file_idx]
-                        confirm = input(f"You have selected '{file_name}'. Do you want to proceed? (yes/no): ").lower()
-                        if confirm == 'yes' or confirm == 'y' or confirm == '1':
-                            print(f"\nYou have confirmed the selection: '{file_name}'")
-                            return file_name
-                        else:
-                            print("\nPlease reselect the file.")
-                    else:
-                        print("\nInvalid selection. Please enter a number from the list.")
-                except ValueError:
-                    print("\nInvalid input. Please enter a valid number.")
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-    def select_stimulus(self):
-        stimuli_list = [stimulus for stimulus in self.data['stimuli'].unique() if str(stimulus).endswith('.jpg')]
-        print("\nHere is a list of stimuli that can be visualized:")
+        print("\nHere is a list of files that can be visualized:")
         print("#################################")
-        for idx, file in enumerate(stimuli_list, 1):
+        for idx, file in enumerate(input_dir, 1):
             print("{:<4} {}".format(idx, file))
         print("#################################")
         
         while True:
             try:
-                file_idx = int(input("\nPlease select the file to visualize (enter the number): ")) - 1
-                if 0 <= file_idx < len(stimuli_list):
-                    stimulus_name = stimuli_list[file_idx]
-                    confirm = input(f"You have selected '{stimulus_name}'. Do you want to proceed? (yes/no): ").lower()
-                    if confirm == 'yes' or confirm == 'y' or confirm == '1':
-                        print(f"\nYou have confirmed the selection: '{stimulus_name}'")
-                        return stimulus_name
-                    else:
-                        print("\nPlease reselect the file.")
+                file_idx = int(input("\nSelect the file to visualize (enter the number): "))
+                if 1 <= file_idx <= len(input_dir):
+                    return input_dir[file_idx - 1]
+                else:
+                    print("\nInvalid selection. Please enter a number from the list.")
+            except ValueError:
+                print("\nInvalid input. Please enter a valid number.")
+
+    def select_stimulus(self, data):
+        stimuli_list = [stimulus for stimulus in data['stimuli'].unique() if str(stimulus).endswith('.jpg')]
+        print("\nHere is a list of stimuli that can be visualized:")
+        print("#################################")
+        for idx, stimulus in enumerate(stimuli_list, 1):
+            print("{:<4} {}".format(idx, stimulus))
+        print("#################################")
+        
+        while True:
+            try:
+                file_idx = int(input("\nSelect the stimulus to visualize (enter the number): "))
+                if 1 <= file_idx <= len(stimuli_list):
+                    return stimuli_list[file_idx - 1]
                 else:
                     print("\nInvalid selection. Please enter a number from the list.")
             except ValueError:
@@ -100,13 +72,9 @@ class Visualize:
         
         while True:
             try:
-                method = int(input("\nPlease select the visualization method (enter the number): "))
-                if method == 1:
-                    return "heatmap"
-                elif method == 2:
-                    return "fixation"
-                elif method == 3:
-                    return "saccade"
+                method = int(input("\nSelect the visualization method (enter the number): "))
+                if method in [1, 2, 3]:
+                    return ["heatmap", "fixation", "saccade"][method - 1]
                 else:
                     print("\nInvalid selection. Please enter a number from the list.")
             except ValueError:
@@ -115,10 +83,19 @@ class Visualize:
     def display_result(self):
         image = cv2.imread(os.path.join(self.RESULT_DIR, self.visualize_method, self.stimulus))
         cv2.imshow('Image', image)
-        cv2.waitKey(0)
+        cv2.waitKey(0)  # Display until any key is pressed
         cv2.destroyAllWindows()
     
-    def run(self):
+    def run_visualization(self):
+        self.file_name = self.select_file()
+        if self.file_name is None:
+            return False
+        self.data = pd.read_csv(os.path.join(self.INPUT_DIR, self.file_name))
+        self.stimulus = self.select_stimulus(self.data)
+        if self.stimulus is None:
+            return False
+        self.visualize_method = self.select_visualize_method()
+
         if self.visualize_method == "heatmap":
             heatmap = GazeHeatmap(os.path.join(self.INPUT_DIR, self.file_name), self.stimulus)
             heatmap.run()
@@ -126,8 +103,13 @@ class Visualize:
             pass
         elif self.visualize_method == "saccade":
             pass
-        
+
         self.display_result()
+        return True
+
+    def run(self):
+        while self.run_visualization():
+            pass
 
 
 if __name__ == '__main__':
