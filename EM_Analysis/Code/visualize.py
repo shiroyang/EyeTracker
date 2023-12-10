@@ -1,10 +1,12 @@
 import os
 import pandas as pd
-from OOP_HeatMap import GazeHeatmap
 import cv2
 from threading import Thread
 from pynput import keyboard
 import sys
+
+from OOP_HeatMap import GazeHeatmap
+from OOP_Scanpath import GazeScanpath
 
 class Visualize:
     def __init__(self) -> None:
@@ -66,7 +68,7 @@ class Visualize:
         print("\nHere is a list of visualization methods:")
         print("#################################")
         print("1. Heatmap")
-        print("2. Fixation points")
+        print("2. Scanpath")
         print("3. Saccades")
         print("#################################")
         
@@ -74,7 +76,7 @@ class Visualize:
             try:
                 method = int(input("\nSelect the visualization method (enter the number): "))
                 if method in [1, 2, 3]:
-                    return ["heatmap", "fixation", "saccade"][method - 1]
+                    return ["heatmap", "scanpath", "saccade"][method - 1]
                 else:
                     print("\nInvalid selection. Please enter a number from the list.")
             except ValueError:
@@ -99,8 +101,9 @@ class Visualize:
         if self.visualize_method == "heatmap":
             heatmap = GazeHeatmap(os.path.join(self.INPUT_DIR, self.file_name), self.stimulus)
             heatmap.run()
-        elif self.visualize_method == "fixation":
-            pass
+        elif self.visualize_method == "scanpath":
+            scanpath = GazeScanpath(os.path.join(self.INPUT_DIR, self.file_name), self.stimulus)
+            scanpath.run()
         elif self.visualize_method == "saccade":
             pass
 

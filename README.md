@@ -82,4 +82,14 @@ Our objective is to augment the `.csv` file with an additional attribute represe
       - plot the data with different colors for each state
       - plot the fixation points in two methods
          - plot the fixation points as a heatmap
-         - plot the convex hull of the fixation points
+         - plot the fixation scan path
+
+2. **Scanpath**
+   - **Visualizing Fixation Points**: We will plot each fixation point on the image. The color intensity (redder color) will depend on the duration of the fixation.
+   - **Drawing Directed Arrows**: We will draw arrows to connect each fixation point in the order they occurred.
+   - **Displaying Fixation Numbers**: Each fixation point will be annotated with its order number in the sequence.
+
+   
+
+
+
