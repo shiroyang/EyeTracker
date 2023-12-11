@@ -16,6 +16,7 @@ from pynput import keyboard
 import pandas as pd
 import numpy as np
 from screeninfo import get_monitors
+import time
 
 class StimuliExperiment:
     FIXATION_CROSS_DURATION = 1
@@ -40,18 +41,33 @@ class StimuliExperiment:
     def show_start_instruction(self):
         # Create an image with the text "Press Enter to start the experiment"
         instruction_img = np.zeros((self.screen_height, self.screen_width, 3), dtype=np.uint8)
-        cv2.putText(instruction_img, "Press Enter to start the experiment", 
-                    (100, self.screen_height // 2), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 
-                    1, 
-                    (255, 255, 255), 
-                    2, 
-                    cv2.LINE_AA)
 
-        cv2.imshow('Stimulus', instruction_img)
-        print("Press Enter to start the experiment")
+        # Set the window to full-screen
+        cv2.namedWindow('Stimulus', cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty('Stimulus', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+        # Initialize countdown time (3 seconds)
+        countdown_time = 3
+        start_time = time.time()
+
         while True:
-            if cv2.waitKey(1) & 0xFF == 13:  # 13 is the Enter Key
+            # Calculate remaining time
+            elapsed_time = time.time() - start_time
+            remaining_time = max(0, countdown_time - int(elapsed_time))
+
+            # Update and show the instruction image with remaining time
+            instruction_img_updated = instruction_img.copy()
+            cv2.putText(instruction_img_updated, f"Press Enter to start the experiment in {remaining_time}s", 
+                        (100, self.screen_height // 2), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 
+                        1, 
+                        (255, 255, 255), 
+                        2, 
+                        cv2.LINE_AA)
+            cv2.imshow('Stimulus', instruction_img_updated)
+
+            # Check for Enter key press after countdown
+            if cv2.waitKey(1) & 0xFF == 13 and elapsed_time > countdown_time:  # 13 is the Enter Key
                 break
 
         cv2.destroyAllWindows()
@@ -126,12 +142,12 @@ class StimuliExperiment:
             return False
 
     def run(self):
-        self.show_start_instruction()
         
         listener = keyboard.Listener(on_press=self.on_press)
         thread_keyboard = threading.Thread(target=listener.start)
         thread_keyboard.start()
 
+        self.show_start_instruction()
         combined_data = self.display_stimuli_and_record()
 
         key_df = pd.DataFrame(self.key_presses)
