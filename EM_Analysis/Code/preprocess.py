@@ -73,8 +73,8 @@ class EyeMovement:
                     idx += 1
                 end_idx = idx
                 
-                # Check if the count of missing points is 5 or fewer
-                if 1 <= (end_idx - start_idx) <= 5:
+                # Check if the count of missing points is 4 or fewer
+                if 1 <= (end_idx - start_idx) <= 4:
                     # Ensure that both bounding points are valid for interpolation
                     if start_idx > 0 and end_idx < len(self.data):
                         x1, y1 = self.data.at[start_idx - 1, self.col]
@@ -105,7 +105,7 @@ class EyeMovement:
                 blink_end_idx = idx
 
                 # Check if the consecutive missing frames count as a blink or just error states
-                if blink_end_idx - blink_start_idx >= 6:
+                if blink_end_idx - blink_start_idx >= 5:
                     self.states.extend(['Blink'] * (blink_end_idx - blink_start_idx))
                 else:
                     self.states.extend(['Error'] * (blink_end_idx - blink_start_idx))
@@ -160,6 +160,11 @@ class EyeMovement:
                     for j in range(fixation_start, i):
                         self.data.at[j, 'fixation_center'] = center_point
                 fixation_start = None  # Reset for the next fixation
+    
+    def add_error_state(self):
+        for i in range(len(self.data)):
+            if self.states[i] == 'Fixation' and self.data.at[i, 'fixation_center'] == (None, None):
+                self.states[i] = 'Error'
 
     def add_state_to_csv(self):
         self.data['eye_state'] = self.states
@@ -172,6 +177,7 @@ class EyeMovement:
         self.identify_saccade()
         self.identify_fixation()
         self.compute_center_point()
+        self.add_error_state()
         self.add_state_to_csv()
 
 

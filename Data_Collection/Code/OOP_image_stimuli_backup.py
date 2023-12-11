@@ -36,25 +36,12 @@ class StimuliExperiment:
         self.data_lock = threading.Lock()
         now = datetime.now()
         self.file_path = now.strftime('./Data_Collection/Data/Raw/Stimuli/%Y%m%d%H%M.csv')
-        
-    def show_start_instruction(self):
-        # Create an image with the text "Press Enter to start the experiment"
-        instruction_img = np.zeros((self.screen_height, self.screen_width, 3), dtype=np.uint8)
-        cv2.putText(instruction_img, "Press Enter to start the experiment", 
-                    (100, self.screen_height // 2), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 
-                    1, 
-                    (255, 255, 255), 
-                    2, 
-                    cv2.LINE_AA)
 
-        cv2.imshow('Stimulus', instruction_img)
-        print("Press Enter to start the experiment")
-        while True:
-            if cv2.waitKey(1) & 0xFF == 13:  # 13 is the Enter Key
-                break
-
-        cv2.destroyAllWindows()
+    # def place_image_center(self, screen, image):
+    #     x_offset = (self.screen_width - image.shape[1]) // 2
+    #     y_offset = (self.screen_height - image.shape[0]) // 2
+    #     screen[y_offset:y_offset + image.shape[0], x_offset:x_offset + image.shape[1]] = image
+    #     return screen
 
     def wait_or_break(self, duration):
         start_time = datetime.now()
@@ -126,8 +113,6 @@ class StimuliExperiment:
             return False
 
     def run(self):
-        self.show_start_instruction()
-        
         listener = keyboard.Listener(on_press=self.on_press)
         thread_keyboard = threading.Thread(target=listener.start)
         thread_keyboard.start()

@@ -25,7 +25,7 @@ class GazePiechart:
         CNT = Counter(selected_data['eye_state'])
         labels = list(CNT.keys())
         values = list(CNT.values())
-        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
+        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3, textinfo='label+percent', insidetextorientation='radial')])
         fig.show()
         fig.write_image(self.output_name)
         
