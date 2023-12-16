@@ -1,4 +1,4 @@
-# Eye Movement Data Analysis System Design
+# Gaze Analysis System Design
 
 This document elaborates on the system design for analyzing raw eye movement data using Python, focusing on the `EyeMovement` class.
 
@@ -53,6 +53,8 @@ Containing JSON-formatted attributes:
 1. **Heatmap:** Uses a Gaussian matrix for gaze points, color-coded with the jet colormap.
 2. **Scanpath:** Shows sequential gaze movement.
 3. **Pie Chart:** Displays percentages of fixations, saccades, blinks, and errors.
+<img width="1280" alt="image" src="https://github.com/shiroyang/EyeTracker/assets/60550888/7f8d9b2c-9137-4154-b906-ec6cb0a965b0">
+
 
 ## System Design Features
 
@@ -61,6 +63,11 @@ Containing JSON-formatted attributes:
 
 ## Comparison with Tobii Pro Lab
 - Different criteria for fixation identification and visualization techniques.
+<img width="1280" alt="image" src="https://github.com/shiroyang/EyeTracker/assets/60550888/83c80a05-e346-463b-9846-ea7fe41c4796">
+
+<img width="1280" alt="image" src="https://github.com/shiroyang/EyeTracker/assets/60550888/0be04442-153b-4682-930e-57a0f2e2dcdb">
+
+
 
 ## Future Work
 - Explore alternative methods for saccade and fixation identification (I-DT method).
