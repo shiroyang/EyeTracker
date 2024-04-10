@@ -1,9 +1,4 @@
 """
-Issue 1209: 
-This code will display stimuli immidiately. 
-However, launching eye tracker will take some time.
-Therefore, I need to add an instruction to show "press enter to start the experiment".
-
 Please import StimuliExperiment class from this script.
 This class will create the image stimuli for the experiment and handle the keyboard input simultaneously.
 """

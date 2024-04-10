@@ -19,8 +19,8 @@ def get_matched_files():
     return list(set(files_input) - set(files_target))
     
 class EyeMovement:
-    INPUT_DIR = './Data_Collection/Data/Synced/'
-    TARGET_DIR = './Data_Collection/Data/Processed/'
+    INPUT_DIR = './EM_Analysis/Data/Synced/'
+    TARGET_DIR = './EM_Analysis/Data/Processed/'
 
     SCREEN_SIZE_W = 596.7  # mm
     PIXEL_PER_MM = SCREEN_SIZE_W / 1920

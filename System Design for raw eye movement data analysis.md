@@ -1,3 +1,11 @@
+# psychopy Branch
+
+This `psychopy` branch is exclusively designed for integrating [PsychoPy](https://www.psychopy.org/) with the Tobii eye tracker.
+
+In this case, we assume you have gathered the raw eye movement data and PsychoPy data.
+
+**NEVER MERGE THIS BRANCH WITH THE MAIN BRANCH.**
+
 ## System Design for raw eye movement data analysis
 
 I want to construct a complete system for analyzing eye movement data using python classes, where calss name = EyeMovement and achieve the following goals.

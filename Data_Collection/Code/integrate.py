@@ -42,7 +42,7 @@ class DataIntegration:
         idx = 0
         
         # ************* Remove this code afterwards: Start *************
-        self.img_timestamp.pop(0)
+        # self.img_timestamp.pop(0)
         for image_name, timestamp in self.img_timestamp:
             print(image_name, timestamp)
         # ************* Remove this code afterwards: End *************
