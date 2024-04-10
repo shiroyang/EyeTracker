@@ -1,3 +1,13 @@
+# psychopy Branch
+
+This `psychopy` branch is exclusively designed for integrating [PsychoPy](https://www.psychopy.org/) with the Tobii eye tracker.
+
+In this case, we assume you have gathered the raw eye movement data and PsychoPy data.
+
+Please refer to the `EM_Analysis` folder only.
+
+**NEVER MERGE THIS BRANCH WITH THE MAIN BRANCH.**
+
 # Eye Movement Data Analysis System Design
 
 This document outlines the system design for analyzing raw eye movement data. The system will be implemented using Python with the class name `EyeMovement`. Below are the specifications for the system, detailing the input data format, hardware configuration, and the analytic approach to categorize eye movement.
