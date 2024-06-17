@@ -9,9 +9,11 @@ The result will be saved in the Data_Collection/Data/Processed folder.
 
 import os
 import pandas as pd
+import numpy as np
 from math import tan, pi, sqrt
+from functools import cache
 import ast
-    
+
 def get_matched_files():
     files_input = os.listdir(EyeMovement.INPUT_DIR)
     files_target = os.listdir(EyeMovement.TARGET_DIR)
@@ -26,10 +28,12 @@ class EyeMovement:
     PIXEL_PER_MM = SCREEN_SIZE_W / 1920
     SCREEN_SIZE_H = 335.7  # mm
     SCREEN_TO_EYE_DIST = 650  # mm
-    SACCADE_THRESHOLD = pi / 9  # 20 degrees
-    FIXATION_THRESHOLD = 6 # 6 frames = 100ms
+    BLINK_THRESHOLD = 5  # 5 consecutive missing frames
     SAMPLING_RATE = 60  # Hz
 
+    # IVT parameters
+    IVT_SACCADE_THRESHOLD = 30  # 30 degree per second
+    IVT_FIXATION_THRESHOLD = 6  # Fixation is at least 100ms
 
     def __init__(self, filename):
         self.filename = filename
@@ -39,6 +43,7 @@ class EyeMovement:
         self.col = None
         self.validity_col = None
         self.states = []
+        self.blink = []
 
     def _convert_to_tuple(self, value):
         try:
@@ -63,7 +68,6 @@ class EyeMovement:
         self.data['eye_to_use'] = self.eye_to_use
 
     def interpolate_coordinates(self):
-    
         idx = 0
         while idx < len(self.data):
             # If the current point is missing
@@ -91,13 +95,12 @@ class EyeMovement:
             else:
                 idx += 1
 
-
     def identify_blink(self):
         idx = 0
         total_rows = len(self.data)
 
         while idx < total_rows:
-            # Check if both eyes' data is missing at the current index
+            # Check if the eye data is missing at the current index
             if self.data.at[idx, self.validity_col] == 0:
                 blink_start_idx = idx
                 while (idx < total_rows and self.data.at[idx, self.validity_col] == 0):
@@ -105,81 +108,98 @@ class EyeMovement:
                 blink_end_idx = idx
 
                 # Check if the consecutive missing frames count as a blink or just error states
-                if blink_end_idx - blink_start_idx >= 5:
-                    self.states.extend(['Blink'] * (blink_end_idx - blink_start_idx))
+                if blink_end_idx - blink_start_idx >= EyeMovement.BLINK_THRESHOLD:
+                    self.blink.extend(['Blink'] * (blink_end_idx - blink_start_idx))
                 else:
-                    self.states.extend(['Error'] * (blink_end_idx - blink_start_idx))
+                    self.blink.extend(['Error'] * (blink_end_idx - blink_start_idx))
             else:
-                self.states.append(None)
+                self.blink.append(None)
                 idx += 1
-
-
-    def identify_saccade(self):
+                
+    def visual_angle_calculation(self, p1, p2):
+        # Convert to actual coordinates on monitor
+        x1, y1 = p1[0] * EyeMovement.SCREEN_SIZE_W, p1[1] * EyeMovement.SCREEN_SIZE_H
+        x2, y2 = p2[0] * EyeMovement.SCREEN_SIZE_W, p2[1] * EyeMovement.SCREEN_SIZE_H
+        d = sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        theta = np.arctan(d / EyeMovement.SCREEN_TO_EYE_DIST)
+        theta = np.rad2deg(theta)
+        return theta
+                
+    def IVT(self):
+        """
+        Calculate the distance between each consecutive point, 
+        if the distance is greater than the threshold, then it is a saccade
+        The rest of the points are fixations, however, if the fixation is less than 6 frames, it should be considered as an error
+        identify saccade -> identify fixation -> compute center point -> add error state
+        """
+        self.IVT_states = self.blink[:]
+        
+        # identify saccade
         col = f'{self.eye_to_use}_gaze_point_on_display_area'
         for i in range(len(self.data) - 1):
-            if self.states[i]:  # Skip already identified states
+            if self.IVT_states[i]:  # Skip already identified states
                 continue
             
-            x1, y1 = self.data.at[i, col]
-            x2, y2 = self.data.at[i+1, col]
-            if x1 is None or x2 is None or y1 is None or y2 is None: continue
-            # Convert to actual coordinates on monitor
-            x1, y1 = x1 * EyeMovement.SCREEN_SIZE_W, y1 * EyeMovement.SCREEN_SIZE_H
-            x2, y2 = x2 * EyeMovement.SCREEN_SIZE_W, y2 * EyeMovement.SCREEN_SIZE_H
-            
-            # Calculate the velocity, pixel/sec
-            v = sqrt((x2 - x1)**2 + (y2 - y1)**2) * EyeMovement.SAMPLING_RATE * EyeMovement.PIXEL_PER_MM # 60 Hz sampling rate
-            if v >= EyeMovement.SCREEN_TO_EYE_DIST * tan(EyeMovement.SACCADE_THRESHOLD):  # 30 degree per second threshold
-                self.states[i] = 'Saccade'
-
-    def identify_fixation(self):
-        for i, state in enumerate(self.states):
+            p1 = self.data.at[i, col]
+            p2 = self.data.at[i+1, col]
+            # Ignore the point where value is missing
+            if p1[0] is None or p2[0] is None or p1[1] is None or p2[1] is None: continue
+        
+            # Calculate the velocity, 
+            v = self.visual_angle_calculation(p1, p2) * EyeMovement.SAMPLING_RATE # 60 Hz sampling rate
+            if v >= EyeMovement.IVT_SACCADE_THRESHOLD:
+                self.IVT_states[i] = 'Saccade'
+        
+        # identify fixation
+        for i, state in enumerate(self.IVT_states):
             if not state:
-                self.states[i] = 'Fixation'
+                self.IVT_states[i] = 'Fixation'
 
-    def compute_center_point(self):
-        col = f'{self.eye_to_use}_gaze_point_on_display_area'
+        # add state to the dataframe
+        self.data['IVT_state'] = self.IVT_states
+        
+        # compute fixation centroid
         fixation_start = None
-        self.data['fixation_center'] = [(None, None)] * len(self.data)
-
-        # Append a non-fixation state to handle fixation at the end of data
-        states = self.states + ['End']
-
-        for i, state in enumerate(states):
+        self.data['IVT_fixation_centroid'] = [(None, None)] * len(self.data)
+        IVT_states = self.IVT_states + ['End']
+        
+        for i, state in enumerate(IVT_states):
             if state == 'Fixation':
                 if fixation_start is None:
-                    fixation_start = i  # Start of a new fixation
+                    fixation_start = i
+            # Fixation has ended, check if it was longer or equal to 6 frames
             elif fixation_start is not None:
-                # Fixation has ended, check if it was longer than 6 frames
-                if i - fixation_start > EyeMovement.FIXATION_THRESHOLD:
-                    # Calculate fixation center for the points between fixation_start and i
+                if i - fixation_start >= EyeMovement.IVT_FIXATION_THRESHOLD:
                     fixation_points = self.data[col][fixation_start:i]
                     x_center = fixation_points.apply(lambda p: p[0]).mean()
                     y_center = fixation_points.apply(lambda p: p[1]).mean()
                     center_point = (x_center, y_center)
                     for j in range(fixation_start, i):
-                        self.data.at[j, 'fixation_center'] = center_point
-                fixation_start = None  # Reset for the next fixation
-    
-    def add_error_state(self):
+                        self.data.at[j, 'IVT_fixation_centroid'] = center_point
+                fixation_start = None
+        
+        # add error state
         for i in range(len(self.data)):
-            if self.states[i] == 'Fixation' and self.data.at[i, 'fixation_center'] == (None, None):
-                self.states[i] = 'Error'
+            if self.data.at[i, 'IVT_state'] == 'Fixation' and self.data.at[i, 'IVT_fixation_centroid'] == (None, None):
+                self.data.at[i, 'IVT_state'] = 'Error'
+                
+        # For 3 cosecutive eye states, change [Saccade, Error, Saccade] to [Saccade, Saccade, Saccade]
+        for i in range(len(self.data)-2):
+            first_state = self.data.at[i, 'IVT_state']
+            second_state = self.data.at[i+1, 'IVT_state']
+            third_state = self.data.at[i+2, 'IVT_state']
+            if first_state == 'Saccade' and second_state == 'Error' and third_state == 'Saccade':
+                self.data.at[i+1, 'IVT_state'] = 'Saccade'
 
     def add_state_to_csv(self):
-        self.data['eye_state'] = self.states
-        self.data.to_csv(os.path.join(EyeMovement.TARGET_DIR, self.filename) , index=False)
+        self.data.to_csv(os.path.join(EyeMovement.TARGET_DIR, self.filename), index=False)
 
     def run(self):
         self.decide_eye_to_use()
         self.interpolate_coordinates()
         self.identify_blink()
-        self.identify_saccade()
-        self.identify_fixation()
-        self.compute_center_point()
-        self.add_error_state()
+        self.IVT()
         self.add_state_to_csv()
-
 
 if __name__ == "__main__":
     matched_files = get_matched_files()

@@ -123,7 +123,7 @@ class GazeScanpath:
         df = pd.read_csv(self.input_path)
         condition = df['stimuli'] == self.image_name
         selected_data = df[condition]
-        fixation_center_list = selected_data['fixation_center'].apply(self.to_pixel).tolist()
+        fixation_center_list = selected_data['IVT_fixation_centroid'].apply(self.to_pixel).tolist()
         filtered_fixation_center_list = [coord for coord in fixation_center_list if coord != (None, None)]
         clean_fixation_center_list = []
         idx = 0
